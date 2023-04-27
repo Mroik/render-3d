@@ -1,4 +1,5 @@
 use std::iter;
+use std::f64::consts::PI;
 
 type Angle = f64;
 type Coord = (f64, f64, f64);
@@ -61,6 +62,44 @@ impl Renderer {
                 }
             }
         }
+    }
+}
+
+struct Cube {
+    center: Coord,
+    size: f64,  // Size of an edge
+    xy_angle: f64,
+    z_angle: f64,
+}
+
+impl Cube {
+    fn get_vector(&self, xy_a: f64, z_a: f64) -> Coord {
+        let z_angle = z_a + self.z_angle;
+        let xy_angle = xy_a + self.xy_angle;
+        let x = self.size * z_angle.sin() * xy_angle.cos() / 2.0;
+        let y = self.size * z_angle.sin() * xy_angle.sin() / 2.0;
+        let z = self.size * z_angle.cos() / 2.0;
+        return (x, y, z);
+    }
+
+    fn generate_side(&self, vector: Coord) -> Vec<(Coord, Coord)> {
+        todo!();
+    }
+}
+
+impl Item for Cube {
+    // First coords is the location of the point,
+    // the second one is the vector indicating the
+    // direction of the surface normal
+    fn generate_points(&self) -> Vec<(Coord, Coord)> {
+        let mut points: Vec<(Coord, Coord)> = vec![];
+        for i in 0..4 {
+            for j in 0..4 {
+                let vector = self.get_vector(PI / 2.0 * i as f64, PI / 2.0 * j as f64);
+                points.extend(self.generate_side(vector));
+            }
+        }
+        return points;
     }
 }
 
