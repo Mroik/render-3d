@@ -88,9 +88,14 @@ impl Cube {
 }
 
 impl Item for Cube {
-    // First coords is the location of the point,
-    // the second one is the vector indicating the
-    // direction of the surface normal
+    /* First coords are the location of the point,
+     * the second ones are the vector indicating the
+     * direction of the surface normal.
+     *
+     * It also generates some sides twice, would be more
+     * efficient to specify only the 6 sides to render instead
+     * rotating on both axes
+     */
     fn generate_points(&self) -> Vec<(Coord, Coord)> {
         let mut points: Vec<(Coord, Coord)> = vec![];
         for i in 0..4 {
