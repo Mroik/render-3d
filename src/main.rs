@@ -1,9 +1,7 @@
 use std::iter;
 use std::f64::consts::PI;
 
-type Angle = f64;
 type Coord = (f64, f64, f64);
-type Vector = (Coord, Coord);
 
 const LUMINOSITY: &str = ".,-~:;=!*#$@";
 
@@ -82,8 +80,26 @@ impl Cube {
         return (x, y, z);
     }
 
-    fn generate_side(&self, vector: Coord) -> Vec<(Coord, Coord)> {
-        todo!();
+    fn generate_side(&self, xy: f64, z_a: f64) -> Vec<(Coord, Coord)> {
+        let mut ris = vec![];
+        let dir = self.get_vector(xy, z_a);
+
+        let x_vec = self.get_vector(xy, z_a + PI / 2.0);
+        let start_x = self.center.0 - x_vec.0;
+
+        let y_vec = self.get_vector(xy + PI / 2.0, z_a + PI / 2.0);
+        let start_y = self.center.1 - y_vec.1;
+
+        let t = (start_x, start_y, dir.2);
+        for x in 0..101 {
+            for y in 0..101 {
+                let mut tt = t;
+                tt.0 += x as f64 * self.size / 100.0;
+                tt.1 += y as f64 * self.size / 100.0;
+                ris.push((tt, dir));
+            }
+        }
+        return ris;
     }
 }
 
@@ -100,8 +116,7 @@ impl Item for Cube {
         let mut points: Vec<(Coord, Coord)> = vec![];
         for i in 0..4 {
             for j in 0..4 {
-                let vector = self.get_vector(PI / 2.0 * i as f64, PI / 2.0 * j as f64);
-                points.extend(self.generate_side(vector));
+                points.extend(self.generate_side(PI / 2.0 * i as f64, PI / 2.0 * j as f64));
             }
         }
         return points;
