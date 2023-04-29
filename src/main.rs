@@ -1,4 +1,4 @@
-use std::iter;
+use std::{iter, io};
 use std::f64::consts::PI;
 
 type Coord = (f64, f64, f64);
@@ -15,11 +15,31 @@ struct Renderer {
 }
 
 impl Renderer {
+    fn new(width: usize, height: usize, distance: u32, camera_position: Coord, light_direction: Coord) -> Self {
+        Renderer {
+            width,
+            height,
+            distance,
+            camera_position,
+            light_direction,
+            items: vec![],
+        }
+    }
+
+    fn add_item(&mut self, item: Box<dyn Item>) {
+        self.items.push(item);
+    }
+
     fn convert(&self, coords: Coord) -> Coord {
         let (cam_x, cam_y, cam_z) = self.camera_position;
         let scale = self.distance as f64 / coords.2;
-        let x = cam_x + (coords.0 - cam_x) * scale;
-        let y = cam_y + (coords.1 - cam_y) * scale;
+        let x = (coords.0 - cam_x) * scale;
+        let y = (coords.1 - cam_y) * scale;
+
+        //println!("{:?}", x);
+        //let mut s = String::new();
+        //io::stdin().read_line(&mut s);
+
         return (x, y, cam_z);
     }
 
@@ -31,16 +51,22 @@ impl Renderer {
 
         for item in self.items.as_slice() {
             let points = item.generate_points();
+
+            // TODO This is DEBUG code
+            //println!("{:?}", points);
+            //panic!();
+
             for point in points {
                 let (coords, incr) = point;
                 let (x, y, z) = self.convert(coords);
+                println!("{:?}", coords);
 
                 if !((x as usize) < self.width && (y as usize) < self.height) {
                     continue;
                 }
 
                 if let Some((zz, _)) = z_buffer[self.width * y as usize + x as usize] {
-                    if z < zz {
+                    if z > 0.0 && z < zz {
                         z_buffer[self.width * y as usize + x as usize] = Some((z, incr));
                     }
                 } else {
@@ -59,6 +85,7 @@ impl Renderer {
                     print!(" ");
                 }
             }
+            println!();
         }
     }
 }
@@ -71,6 +98,15 @@ struct Cube {
 }
 
 impl Cube {
+    fn new(center: Coord, size: f64, xy_angle: f64, z_angle: f64) -> Self {
+        Cube {
+            center,
+            size,
+            xy_angle,
+            z_angle,
+        }
+    }
+
     fn get_vector(&self, xy_a: f64, z_a: f64) -> Coord {
         let z_angle = z_a + self.z_angle;
         let xy_angle = xy_a + self.xy_angle;
@@ -80,6 +116,7 @@ impl Cube {
         return (x, y, z);
     }
 
+    // TODO Bug works only for surfaces parallel to angle z = 0
     fn generate_side(&self, xy: f64, z_a: f64) -> Vec<(Coord, Coord)> {
         let mut ris = vec![];
         let dir = self.get_vector(xy, z_a);
@@ -128,4 +165,17 @@ trait Item {
 }
 
 fn main() {
+    let mut renderer = Renderer::new(
+        90,
+        60,
+        10,
+        (400.0, 300.0, 0.0),
+        (500.0, 600.0, 0.0),
+    );
+
+    renderer.add_item(Box::new(Cube::new((400.0, 300.0, 100.0), 20.0, 0.0, 0.0)));
+    renderer.draw();
+
+    let mut s = String::new();
+    io::stdin().read_line(&mut s);
 }
